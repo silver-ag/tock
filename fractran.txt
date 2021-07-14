@@ -1,0 +1,62 @@
+halt 1 {
+  pointer > 9: 0;
+//  timeout <= 0: 0;
+  otherwise: 1;
+}
+out 1 { n }
+
+timeout 1000 { // while testing to avoid accidents
+  timeout - 1;
+}
+
+mode 0 {
+  (mode + 1) % 4;
+  // modes are:
+  // 0 - load pointed at fraction
+  // 1 - compare fraction to current n
+  // 2 - update n and pointer accordingly
+  // 3 - check if finished
+}
+
+pointer 0 {
+  mode + (100 * current_match) = 102: 0; // return to start
+  mode + (100 * current_match) = 2: pointer + 1; // next fraction
+  otherwise: pointer;
+}
+
+current_fract_num 1 {
+  pointer + (100 * mode) = 0: 85;
+  pointer + (100 * mode) = 1: 65;
+  pointer + (100 * mode) = 2: 255;
+  pointer + (100 * mode) = 3: 195;
+  pointer + (100 * mode) = 4: 1;
+  pointer + (100 * mode) = 5: 1;
+  pointer + (100 * mode) = 6: 7;
+  pointer + (100 * mode) = 7: 11;
+  pointer + (100 * mode) = 8: 13;
+  pointer + (100 * mode) = 9: 1;
+  otherwise: current_fract_num;
+}
+current_fract_den 1 {
+  pointer + (100 * mode) = 0: 91;
+  pointer + (100 * mode) = 1: 119;
+  pointer + (100 * mode) = 2: 143;
+  pointer + (100 * mode) = 3: 187;
+  pointer + (100 * mode) = 4: 13;
+  pointer + (100 * mode) = 5: 17;
+  pointer + (100 * mode) = 6: 3;
+  pointer + (100 * mode) = 7: 5;
+  pointer + (100 * mode) = 8: 2;
+  pointer + (100 * mode) = 9: 11;
+  otherwise: current_fract_den;
+}
+
+current_match 0 {
+  (n * current_fract_num) % current_fract_den = 0: 1;
+  otherwise: 0;
+}
+
+n 320 { // expected output 7^8, actual output a bit less
+  current_match + (100 * mode) = 201: n * (current_fract_num / current_fract_den);
+  otherwise: n; 
+}
